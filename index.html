@@ -1,40 +1,128 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
   <head>
-    <meta charset="utf-8">
-    <title>Мини-приложение Данала</title>
+    <meta charset="UTF-8" />
+    <title>Blackjack Mini App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
       body {
-        font-family: Arial, sans-serif;
-        background: #111;
+        background-color: #0b0b0b;
         color: #fff;
-        text-align: center;
-        margin-top: 100px;
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+      }
+      .card {
+        font-size: 2rem;
+        margin: 5px;
       }
       button {
-        background: #0088cc;
+        background-color: #007aff;
         color: white;
         border: none;
-        padding: 12px 20px;
+        padding: 10px 20px;
+        margin: 10px;
         border-radius: 8px;
         cursor: pointer;
-        font-size: 16px;
+        font-size: 1rem;
       }
-      button:hover { background: #0077b3; }
+      button:hover {
+        background-color: #005ecc;
+      }
+      .row {
+        margin-top: 10px;
+      }
     </style>
   </head>
   <body>
-    <h2>Привет, я мини-приложение Данала 😎</h2>
-    <p>Нажми кнопку, чтобы отправить данные обратно боту:</p>
-    <button onclick="sendData()">Отправить</button>
+    <h1>🃏 Blackjack</h1>
+    <div id="player"></div>
+    <div id="dealer"></div>
+
+    <div class="row">
+      <button id="hit">Взять карту</button>
+      <button id="stand">Стоп</button>
+    </div>
 
     <script>
       const tg = window.Telegram.WebApp;
-      tg.expand(); // делает окно на весь экран
+      tg.expand();
 
-      function sendData() {
-        tg.sendData(JSON.stringify({ message: "Привет от мини-приложения!" }));
+      const deck = [
+        "2", "3", "4", "5", "6", "7", "8", "9", "10",
+        "J", "Q", "K", "A"
+      ];
+      function getValue(card) {
+        if (["J", "Q", "K"].includes(card)) return 10;
+        if (card === "A") return 11;
+        return parseInt(card);
+      }
+
+      function handValue(hand) {
+        let total = hand.map(getValue).reduce((a, b) => a + b, 0);
+        let aces = hand.filter(c => c === "A").length;
+        while (total > 21 && aces > 0) {
+          total -= 10;
+          aces--;
+        }
+        return total;
+      }
+
+      let player = [draw(), draw()];
+      let dealer = [draw(), draw()];
+      updateUI();
+
+      function draw() {
+        return deck[Math.floor(Math.random() * deck.length)];
+      }
+
+      function updateUI() {
+        document.getElementById("player").innerHTML =
+          `Игрок: ${player.join(" ")} (сумма: ${handValue(player)})`;
+        document.getElementById("dealer").innerHTML =
+          `Дилер: ${dealer[0]} ❓`;
+      }
+
+      document.getElementById("hit").onclick = () => {
+        player.push(draw());
+        if (handValue(player) >= 21) endGame();
+        updateUI();
+      };
+
+      document.getElementById("stand").onclick = endGame;
+
+      function endGame() {
+        document.getElementById("hit").disabled = true;
+        document.getElementById("stand").disabled = true;
+
+        while (handValue(dealer) < 17) dealer.push(draw());
+        const pVal = handValue(player);
+        const dVal = handValue(dealer);
+
+        let result = "";
+        if (pVal > 21) result = "Ты проиграл 😢 (перебор)";
+        else if (dVal > 21) result = "Ты выиграл 🎉 (дилер перебрал)";
+        else if (pVal > dVal) result = "Ты выиграл 🎉";
+        else if (pVal < dVal) result = "Ты проиграл 😢";
+        else result = "Ничья 🤝";
+
+        document.getElementById("dealer").innerHTML =
+          `Дилер: ${dealer.join(" ")} (сумма: ${dVal})`;
+
+        // Отправляем результат обратно в Telegram
+        const gameData = {
+          message: result,
+          player: player.join(" "),
+          dealer: dealer.join(" "),
+          score: pVal
+        };
+
+        tg.sendData(JSON.stringify(gameData));
+        setTimeout(() => tg.close(), 1500);
       }
     </script>
   </body>
