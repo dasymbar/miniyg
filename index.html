@@ -50,12 +50,13 @@
 
     <script>
       const tg = window.Telegram.WebApp;
+
+      // 🔹 Очень важно для телефона:
+      Telegram.WebApp.ready(); 
       tg.expand();
 
-      const deck = [
-        "2", "3", "4", "5", "6", "7", "8", "9", "10",
-        "J", "Q", "K", "A"
-      ];
+      const deck = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
+
       function getValue(card) {
         if (["J", "Q", "K"].includes(card)) return 10;
         if (card === "A") return 11;
@@ -89,8 +90,8 @@
 
       document.getElementById("hit").onclick = () => {
         player.push(draw());
-        if (handValue(player) >= 21) endGame();
         updateUI();
+        if (handValue(player) >= 21) endGame();
       };
 
       document.getElementById("stand").onclick = endGame;
@@ -100,6 +101,7 @@
         document.getElementById("stand").disabled = true;
 
         while (handValue(dealer) < 17) dealer.push(draw());
+
         const pVal = handValue(player);
         const dVal = handValue(dealer);
 
@@ -113,7 +115,7 @@
         document.getElementById("dealer").innerHTML =
           `Дилер: ${dealer.join(" ")} (сумма: ${dVal})`;
 
-        // Отправляем результат обратно в Telegram
+        // 🔹 Отправляем результат обратно в Telegram
         const gameData = {
           message: result,
           player: player.join(" "),
@@ -121,8 +123,11 @@
           score: pVal
         };
 
+        // 📤 Отправка данных в Telegram
         tg.sendData(JSON.stringify(gameData));
-        setTimeout(() => tg.close(), 1500);
+
+        // ⚠️ Не закрываем автоматически, чтобы работало на телефонах
+        // setTimeout(() => tg.close(), 1500);
       }
     </script>
   </body>
