@@ -15,7 +15,10 @@
         align-items: center;
         justify-content: center;
         height: 100vh;
-        text-align: center;
+      }
+      .card {
+        font-size: 2rem;
+        margin: 5px;
       }
       button {
         background-color: #007aff;
@@ -43,92 +46,89 @@
     <div class="row">
       <button id="hit">Взять карту</button>
       <button id="stand">Стоп</button>
-      <button id="restart" style="display:none;">Сыграть снова</button>
     </div>
 
     <script>
       const tg = window.Telegram.WebApp;
+
+      // 🔹 Очень важно для телефона:
+      Telegram.WebApp.ready(); 
       tg.expand();
-      Telegram.WebApp.ready();
 
       const deck = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
 
       function getValue(card) {
-        if (["J","Q","K"].includes(card)) return 10;
-        if (card==="A") return 11;
+        if (["J", "Q", "K"].includes(card)) return 10;
+        if (card === "A") return 11;
         return parseInt(card);
       }
 
       function handValue(hand) {
-        let total = hand.map(getValue).reduce((a,b)=>a+b,0);
-        let aces = hand.filter(c=>c==="A").length;
-        while(total>21 && aces>0){total-=10; aces--;}
+        let total = hand.map(getValue).reduce((a, b) => a + b, 0);
+        let aces = hand.filter(c => c === "A").length;
+        while (total > 21 && aces > 0) {
+          total -= 10;
+          aces--;
+        }
         return total;
       }
 
-      let player, dealer;
+      let player = [draw(), draw()];
+      let dealer = [draw(), draw()];
+      updateUI();
 
-      function startGame(){
-        player=[draw(),draw()];
-        dealer=[draw(),draw()];
-        updateUI();
-        document.getElementById("hit").style.display="inline-block";
-        document.getElementById("stand").style.display="inline-block";
-        document.getElementById("restart").style.display="none";
+      function draw() {
+        return deck[Math.floor(Math.random() * deck.length)];
       }
 
-      function draw(){ return deck[Math.floor(Math.random()*deck.length)]; }
-
-      function updateUI(){
-        document.getElementById("player").innerHTML=
+      function updateUI() {
+        document.getElementById("player").innerHTML =
           `Игрок: ${player.join(" ")} (сумма: ${handValue(player)})`;
-        document.getElementById("dealer").innerHTML=
+        document.getElementById("dealer").innerHTML =
           `Дилер: ${dealer[0]} ❓`;
       }
 
-      document.getElementById("hit").onclick=()=>{
+      document.getElementById("hit").onclick = () => {
         player.push(draw());
         updateUI();
-        if(handValue(player)>=21) endGame();
+        if (handValue(player) >= 21) endGame();
       };
 
-      document.getElementById("stand").onclick=endGame;
-      document.getElementById("restart").onclick=startGame;
+      document.getElementById("stand").onclick = endGame;
 
-      function endGame(){
-        document.getElementById("hit").style.display="none";
-        document.getElementById("stand").style.display="none";
-        document.getElementById("restart").style.display="inline-block";
+      function endGame() {
+        document.getElementById("hit").disabled = true;
+        document.getElementById("stand").disabled = true;
 
-        while(handValue(dealer)<17) dealer.push(draw());
-        const pVal=handValue(player);
-        const dVal=handValue(dealer);
+        while (handValue(dealer) < 17) dealer.push(draw());
 
-        let result="";
-        if(pVal>21) result="Ты проиграл 😢 (перебор)";
-        else if(dVal>21) result="Ты выиграл 🎉 (дилер перебрал)";
-        else if(pVal>dVal) result="Ты выиграл 🎉";
-        else if(pVal<dVal) result="Ты проиграл 😢";
-        else result="Ничья 🤝";
+        const pVal = handValue(player);
+        const dVal = handValue(dealer);
 
-        document.getElementById("dealer").innerHTML=
+        let result = "";
+        if (pVal > 21) result = "Ты проиграл 😢 (перебор)";
+        else if (dVal > 21) result = "Ты выиграл 🎉 (дилер перебрал)";
+        else if (pVal > dVal) result = "Ты выиграл 🎉";
+        else if (pVal < dVal) result = "Ты проиграл 😢";
+        else result = "Ничья 🤝";
+
+        document.getElementById("dealer").innerHTML =
           `Дилер: ${dealer.join(" ")} (сумма: ${dVal})`;
 
-        const gameData={
+        // 🔹 Отправляем результат обратно в Telegram
+        const gameData = {
           message: result,
           player: player.join(" "),
           dealer: dealer.join(" "),
           score: pVal
         };
 
-        if(window.Telegram && Telegram.WebApp){
-          tg.sendData(JSON.stringify(gameData));
-        } else {
-          alert("⚠️ Telegram API недоступен. Открой игру через кнопку в боте.");
-        }
-      }
+        // 📤 Отправка данных в Telegram
+        tg.sendData(JSON.stringify(gameData));
 
-      startGame();
+        // ⚠️ Не закрываем автоматически, чтобы работало на телефонах
+        // setTimeout(() => tg.close(), 1500);
+      }
     </script>
   </body>
 </html>
