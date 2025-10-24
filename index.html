@@ -15,10 +15,7 @@
         align-items: center;
         justify-content: center;
         height: 100vh;
-      }
-      .card {
-        font-size: 2rem;
-        margin: 5px;
+        text-align: center;
       }
       button {
         background-color: #007aff;
@@ -42,20 +39,17 @@
     <h1>🃏 Blackjack</h1>
     <div id="player"></div>
     <div id="dealer"></div>
-
     <div class="row">
       <button id="hit">Взять карту</button>
       <button id="stand">Стоп</button>
+      <button id="restart" style="display:none;">Сыграть снова</button>
     </div>
 
     <script>
       const tg = window.Telegram.WebApp;
-
-      // 🔹 Очень важно для телефона:
-      Telegram.WebApp.ready(); 
       tg.expand();
 
-      const deck = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
+      const deck = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
 
       function getValue(card) {
         if (["J", "Q", "K"].includes(card)) return 10;
@@ -73,9 +67,16 @@
         return total;
       }
 
-      let player = [draw(), draw()];
-      let dealer = [draw(), draw()];
-      updateUI();
+      let player, dealer;
+
+      function startGame() {
+        player = [draw(), draw()];
+        dealer = [draw(), draw()];
+        updateUI();
+        document.getElementById("hit").style.display = "inline-block";
+        document.getElementById("stand").style.display = "inline-block";
+        document.getElementById("restart").style.display = "none";
+      }
 
       function draw() {
         return deck[Math.floor(Math.random() * deck.length)];
@@ -90,18 +91,19 @@
 
       document.getElementById("hit").onclick = () => {
         player.push(draw());
-        updateUI();
         if (handValue(player) >= 21) endGame();
+        updateUI();
       };
 
       document.getElementById("stand").onclick = endGame;
+      document.getElementById("restart").onclick = startGame;
 
       function endGame() {
-        document.getElementById("hit").disabled = true;
-        document.getElementById("stand").disabled = true;
+        document.getElementById("hit").style.display = "none";
+        document.getElementById("stand").style.display = "none";
+        document.getElementById("restart").style.display = "inline-block";
 
         while (handValue(dealer) < 17) dealer.push(draw());
-
         const pVal = handValue(player);
         const dVal = handValue(dealer);
 
@@ -115,7 +117,6 @@
         document.getElementById("dealer").innerHTML =
           `Дилер: ${dealer.join(" ")} (сумма: ${dVal})`;
 
-        // 🔹 Отправляем результат обратно в Telegram
         const gameData = {
           message: result,
           player: player.join(" "),
@@ -123,12 +124,15 @@
           score: pVal
         };
 
-        // 📤 Отправка данных в Telegram
-        tg.sendData(JSON.stringify(gameData));
-
-        // ⚠️ Не закрываем автоматически, чтобы работало на телефонах
-        // setTimeout(() => tg.close(), 1500);
+        // Отправляем результат в Telegram
+        if (window.Telegram && Telegram.WebApp) {
+          tg.sendData(JSON.stringify(gameData));
+        } else {
+          alert("⚠️ Telegram API недоступен. Открой игру через кнопку в боте.");
+        }
       }
+
+      startGame();
     </script>
   </body>
 </html>
