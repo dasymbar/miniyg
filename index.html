@@ -43,10 +43,14 @@ function startGame(){
   document.getElementById("restart").style.display="none";
 }
 
-function updateUI(){
+function updateUI(showDealerTotal=false){
   document.getElementById("player").innerHTML=`Игрок: ${player.join(" ")} (сумма: ${handValue(player)})`;
-  // Показываем сумму дилера сразу
-  document.getElementById("dealer").innerHTML=`Дилер: ${dealer.join(" ")} (сумма: ${handValue(dealer)})`;
+  
+  if(showDealerTotal){
+    document.getElementById("dealer").innerHTML=`Дилер: ${dealer.join(" ")} (сумма: ${handValue(dealer)})`;
+  } else {
+    document.getElementById("dealer").innerHTML=`Дилер: ${dealer[0]} ❓`;
+  }
 }
 
 document.getElementById("hit").onclick=()=>{
@@ -54,6 +58,7 @@ document.getElementById("hit").onclick=()=>{
   updateUI();
   if(handValue(player)>=21) endGame();
 };
+
 document.getElementById("stand").onclick=endGame;
 document.getElementById("restart").onclick=startGame;
 
@@ -63,8 +68,8 @@ function endGame(){
   document.getElementById("restart").style.display="inline-block";
 
   while(handValue(dealer)<17) dealer.push(draw());
-  const pVal=handValue(player), dVal=handValue(dealer);
 
+  const pVal=handValue(player), dVal=handValue(dealer);
   let result="";
   if(pVal>21) result="Ты проиграл 😢 (перебор)";
   else if(dVal>21) result="Ты выиграл 🎉 (дилер перебрал)";
@@ -72,15 +77,12 @@ function endGame(){
   else if(pVal<dVal) result="Ты проиграл 😢";
   else result="Ничья 🤝";
 
-  document.getElementById("dealer").innerHTML=`Дилер: ${dealer.join(" ")} (сумма: ${dVal})`;
+  updateUI(true); // показываем полную руку и сумму дилера
 
   const gameData={message:result, player:player.join(" "), dealer:dealer.join(" "), score:pVal};
 
-  if(window.Telegram && Telegram.WebApp){ 
-      setTimeout(()=> tg.sendData(JSON.stringify(gameData)), 300);  // мобильный WebApp успевает отправить данные
-  } else { 
-      alert("Открой игру через кнопку бота в Telegram!"); 
-  }
+  // мобильный Telegram иногда требует задержку
+  setTimeout(()=> tg.sendData(JSON.stringify(gameData)), 300);
 }
 
 startGame();
