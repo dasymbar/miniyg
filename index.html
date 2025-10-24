@@ -35,7 +35,8 @@ function handValue(hand){ let total=hand.map(getValue).reduce((a,b)=>a+b,0); let
 function draw(){return deck[Math.floor(Math.random()*deck.length)];}
 
 function startGame(){
-  player=[draw(),draw()]; dealer=[draw(),draw()];
+  player=[draw(),draw()];
+  dealer=[draw(),draw()];
   updateUI();
   document.getElementById("hit").style.display="inline-block";
   document.getElementById("stand").style.display="inline-block";
@@ -44,11 +45,14 @@ function startGame(){
 
 function updateUI(){
   document.getElementById("player").innerHTML=`Игрок: ${player.join(" ")} (сумма: ${handValue(player)})`;
-  document.getElementById("dealer").innerHTML=`Дилер: ${dealer[0]} ❓`;
+  // Показываем сумму дилера сразу
+  document.getElementById("dealer").innerHTML=`Дилер: ${dealer.join(" ")} (сумма: ${handValue(dealer)})`;
 }
 
 document.getElementById("hit").onclick=()=>{
-  player.push(draw()); updateUI(); if(handValue(player)>=21) endGame();
+  player.push(draw());
+  updateUI();
+  if(handValue(player)>=21) endGame();
 };
 document.getElementById("stand").onclick=endGame;
 document.getElementById("restart").onclick=startGame;
@@ -72,8 +76,11 @@ function endGame(){
 
   const gameData={message:result, player:player.join(" "), dealer:dealer.join(" "), score:pVal};
 
-  if(window.Telegram && Telegram.WebApp){ tg.sendData(JSON.stringify(gameData)); }
-  else { alert("Открой игру через кнопку бота в Telegram!"); }
+  if(window.Telegram && Telegram.WebApp){ 
+      setTimeout(()=> tg.sendData(JSON.stringify(gameData)), 300);  // мобильный WebApp успевает отправить данные
+  } else { 
+      alert("Открой игру через кнопку бота в Telegram!"); 
+  }
 }
 
 startGame();
