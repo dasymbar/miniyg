@@ -30,9 +30,18 @@ Telegram.WebApp.ready();
 const deck=["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
 let player=[], dealer=[];
 
-function getValue(card){ if(["J","Q","K"].includes(card)) return 10; if(card==="A") return 11; return parseInt(card); }
-function handValue(hand){ let total=hand.map(getValue).reduce((a,b)=>a+b,0); let aces=hand.filter(c=>"A"===c).length; while(total>21 && aces>0){total-=10; aces--;} return total; }
-function draw(){return deck[Math.floor(Math.random()*deck.length)];}
+function getValue(card){ 
+  if(["J","Q","K"].includes(card)) return 10; 
+  if(card==="A") return 11; 
+  return parseInt(card); 
+}
+function handValue(hand){ 
+  let total=hand.map(getValue).reduce((a,b)=>a+b,0); 
+  let aces=hand.filter(c=>c==="A").length; 
+  while(total>21 && aces>0){ total-=10; aces--; } 
+  return total; 
+}
+function draw(){ return deck[Math.floor(Math.random()*deck.length)]; }
 
 function startGame(){
   player=[draw(),draw()];
@@ -45,6 +54,7 @@ function startGame(){
 
 function updateUI(showDealerTotal=false){
   document.getElementById("player").innerHTML=`Игрок: ${player.join(" ")} (сумма: ${handValue(player)})`;
+
   if(showDealerTotal){
     document.getElementById("dealer").innerHTML=`Дилер: ${dealer.join(" ")} (сумма: ${handValue(dealer)})`;
   } else {
@@ -76,15 +86,26 @@ function endGame(){
   else if(pVal<dVal) result="Ты проиграл 😢";
   else result="Ничья 🤝";
 
-  updateUI(true); // показываем полную руку и сумму дилера
+  updateUI(true);
 
-  const gameData={message:result, player:player.join(" "), dealer:dealer.join(" "), score:pVal};
+  const gameData={
+    message:result,
+    player:player.join(" "),
+    dealer:dealer.join(" "),
+    score:pVal,
+    dealer_score:dVal   // ✅ ДОБАВЛЕНО!
+  };
 
-  // Задержка для iOS, чтобы данные дошли
-  setTimeout(()=> tg.sendData(JSON.stringify(gameData)), 200);
+  // iOS FIX — задержка и закрытие
+  setTimeout(()=>{
+      tg.sendData(JSON.stringify(gameData));
+      tg.close();   // ✅ теперь окно закроется
+  }, 300);
 }
 
 startGame();
 </script>
+
 </body>
 </html>
+
