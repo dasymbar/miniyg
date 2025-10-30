@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-body { background:#0b0b0b; color:#fff; font-family:Arial,sans-serif; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; text-align:center; }
+body { background:#0b0b0b; color:#fff; font-family:Arial; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; text-align:center; }
 button { background:#007aff; color:white; border:none; padding:10px 20px; margin:10px; border-radius:8px; cursor:pointer; font-size:1rem; }
 button:hover { background:#005ecc; }
 .row { margin-top:10px; }
@@ -16,6 +16,7 @@ button:hover { background:#005ecc; }
 <h1>🃏 Blackjack</h1>
 <div id="player"></div>
 <div id="dealer"></div>
+
 <div class="row">
   <button id="hit">Взять карту</button>
   <button id="stand">Стоп</button>
@@ -30,46 +31,48 @@ Telegram.WebApp.ready();
 const deck=["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
 let player=[], dealer=[];
 
-function getValue(card){ 
-  if(["J","Q","K"].includes(card)) return 10; 
-  if(card==="A") return 11; 
-  return parseInt(card); 
+function getValue(c){
+  if(["J","Q","K"].includes(c)) return 10;
+  if(c==="A") return 11;
+  return Number(c);
 }
-function handValue(hand){ 
-  let total=hand.map(getValue).reduce((a,b)=>a+b,0); 
-  let aces=hand.filter(c=>c==="A").length; 
-  while(total>21 && aces>0){ total-=10; aces--; } 
-  return total; 
+function handValue(h){
+  let total=h.map(getValue).reduce((a,b)=>a+b,0);
+  let aces=h.filter(x=>x==="A").length;
+  while(total>21 && aces){ total-=10; aces--; }
+  return total;
 }
 function draw(){ return deck[Math.floor(Math.random()*deck.length)]; }
 
 function startGame(){
-  player=[draw(),draw()];
-  dealer=[draw(),draw()];
+  player=[draw(), draw()];
+  dealer=[draw(), draw()];
   updateUI();
   document.getElementById("hit").style.display="inline-block";
   document.getElementById("stand").style.display="inline-block";
   document.getElementById("restart").style.display="none";
 }
 
-function updateUI(showDealerTotal=false){
-  document.getElementById("player").innerHTML=`Игрок: ${player.join(" ")} (сумма: ${handValue(player)})`;
+function updateUI(showDealer = false){
+  document.getElementById("player").innerHTML =
+    `Игрок: ${player.join(" ")} (сумма: ${handValue(player)})`;
 
-  if(showDealerTotal){
-    document.getElementById("dealer").innerHTML=`Дилер: ${dealer.join(" ")} (сумма: ${handValue(dealer)})`;
+  if(showDealer){
+    document.getElementById("dealer").innerHTML =
+      `Дилер: ${dealer.join(" ")} (сумма: ${handValue(dealer)})`;
   } else {
-    document.getElementById("dealer").innerHTML=`Дилер: ${dealer[0]} ❓`;
+    document.getElementById("dealer").innerHTML =
+      `Дилер: ${dealer[0]} ❓`;
   }
 }
 
-document.getElementById("hit").onclick=()=>{
+document.getElementById("hit").onclick = ()=>{
   player.push(draw());
   updateUI();
   if(handValue(player)>=21) endGame();
 };
-
-document.getElementById("stand").onclick=endGame;
-document.getElementById("restart").onclick=startGame;
+document.getElementById("stand").onclick = endGame;
+document.getElementById("restart").onclick = startGame;
 
 function endGame(){
   document.getElementById("hit").style.display="none";
@@ -78,34 +81,26 @@ function endGame(){
 
   while(handValue(dealer)<17) dealer.push(draw());
 
-  const pVal=handValue(player), dVal=handValue(dealer);
-  let result="";
-  if(pVal>21) result="Ты проиграл 😢 (перебор)";
-  else if(dVal>21) result="Ты выиграл 🎉 (дилер перебрал)";
-  else if(pVal>dVal) result="Ты выиграл 🎉";
-  else if(pVal<dVal) result="Ты проиграл 😢";
-  else result="Ничья 🤝";
+  const p = handValue(player), d = handValue(dealer);
+  let msg="";
+  if(p>21) msg="Ты проиграл 😢 (перебор)";
+  else if(d>21) msg="Ты выиграл 🎉 (дилер перебрал)";
+  else if(p>d) msg="Ты выиграл 🎉";
+  else if(p<d) msg="Ты проиграл 😢";
+  else msg="Ничья 🤝";
 
   updateUI(true);
 
-  const gameData={
-    message:result,
-    player:player.join(" "),
-    dealer:dealer.join(" "),
-    score:pVal,
-    dealer_score:dVal   // ✅ ДОБАВЛЕНО!
-  };
-
-  // iOS FIX — задержка и закрытие
-  setTimeout(()=>{
-      tg.sendData(JSON.stringify(gameData));
-      tg.close();   // ✅ теперь окно закроется
-  }, 300);
+  tg.sendData(JSON.stringify({
+    message: msg,
+    player: player.join(" "),
+    dealer: dealer.join(" "),
+    score: p,
+    dealer_score: d
+  }));
 }
 
 startGame();
 </script>
-
 </body>
 </html>
-
