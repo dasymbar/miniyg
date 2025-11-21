@@ -55,14 +55,14 @@ function startGame(){
 
 function updateUI(showDealer = false){
   document.getElementById("player").innerHTML =
-    `Игрок: ${player.join(" ")} (сумма: ${handValue(player)})`;
+    `Spiller: ${player.join(" ")} (Poeng: ${handValue(player)})`;
 
   if(showDealer){
     document.getElementById("dealer").innerHTML =
-      `Дилер: ${dealer.join(" ")} (сумма: ${handValue(dealer)})`;
+      `Dealer: ${dealer.join(" ")} (Poeng: ${handValue(dealer)})`;
   } else {
     document.getElementById("dealer").innerHTML =
-      `Дилер: ${dealer[0]} ❓`;
+      `Dealer: ${dealer[0]} ❓`;
   }
 }
 
@@ -104,4 +104,5 @@ startGame();
 </script>
 </body>
 </html>
+
 
