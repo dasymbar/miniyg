@@ -18,9 +18,9 @@ button:hover { background:#005ecc; }
 <div id="dealer"></div>
 
 <div class="row">
-  <button id="hit">Взять карту</button>
-  <button id="stand">Стоп</button>
-  <button id="restart" style="display:none;">Сыграть снова</button>
+  <button id="hit">Ta kort</button>
+  <button id="stand">Stå</button>
+  <button id="restart" style="display:none;">Spill igjen</button>
 </div>
 
 <script>
@@ -83,11 +83,11 @@ function endGame(){
 
   const p = handValue(player), d = handValue(dealer);
   let msg="";
-  if(p>21) msg="Ты проиграл 😢 (перебор)";
-  else if(d>21) msg="Ты выиграл 🎉 (дилер перебрал)";
-  else if(p>d) msg="Ты выиграл 🎉";
+  if(p>21) msg="Du tapte 😢 (du gikk over 21)";
+  else if(d>21) msg="Du vant 🎉 (dealeren gikk over 21)";
+  else if(p>d) msg="Du tapte 🎉";
   else if(p<d) msg="Ты проиграл 😢";
-  else msg="Ничья 🤝";
+  else msg="Uavgjort 🤝";
 
   updateUI(true);
 
@@ -104,3 +104,4 @@ startGame();
 </script>
 </body>
 </html>
+
