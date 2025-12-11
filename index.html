@@ -85,8 +85,8 @@ function endGame(){
   let msg="";
   if(p>21) msg="Du tapte 😢 (du gikk over 21)";
   else if(d>21) msg="Du vant 🎉 (dealeren gikk over 21)";
-  else if(p>d) msg="Du tapte 🎉";
-  else if(p<d) msg="Ты проиграл 😢";
+  else if(p>d) msg="Du vant 🎉";
+  else if(p<d) msg="Du tapte 😢";
   else msg="Uavgjort 🤝";
 
   updateUI(true);
@@ -104,5 +104,6 @@ startGame();
 </script>
 </body>
 </html>
+
 
 
